@@ -41,6 +41,8 @@ org 0x7c00
     BS_FilSysType db "FAT12   " ; 文件系统类型, 这个类型值只是一个字符串而已，操作系统并不使用该字段来鉴别FAT类文件系统的类型, 8字节补齐
 
 Start:
+    ; 保存 BIOS 传入的启动驱动器号
+    mov [BS_DrvNum], dl  
     ; 段寄存器不能直接赋值，需要通过通用寄存器间接赋值
     mov ax, 0
     mov ds, ax

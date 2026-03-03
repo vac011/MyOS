@@ -4,12 +4,12 @@
 #########################
 
 # Windows命令
-ASM = nasm.exe
-QEMU = qemu-system-x86_64.exe
-ADDR = 127.0.0.1:5900
-BOCHS = bochs.exe
-DBG	= bochsdbg.exe
-BXIMAGE = echo "c" | bximage.exe -func=create -fd="1.44M" -q
+# ASM = nasm.exe
+# QEMU = qemu-system-x86_64.exe
+# ADDR = 127.0.0.1:5900
+# BOCHS = bochs.exe
+# DBG	= bochsdbg.exe
+# BXIMAGE = echo "c" | bximage.exe -func=create -fd="1.44M" -q
 # DD = 
 # MOUNT = 
 # CP = 
@@ -18,12 +18,12 @@ BXIMAGE = echo "c" | bximage.exe -func=create -fd="1.44M" -q
 # CLEAN = del /f /q
 
 # Linux命令
-# ASM = nasm
-# QEMU = qemu-system-x86_64
-# VNC = vncviewer
-# ADDR = 127.0.0.1:5900
-# BOCHS = bochs
-# BXIMAGE = echo "c" | bximage -func=create -fd="1.44M" -q
+ASM = nasm
+QEMU = qemu-system-x86_64
+VNC = vncviewer
+ADDR = 127.0.0.1:5900
+BOCHS = bochs
+BXIMAGE = echo "c" | bximage -func=create -fd="1.44M" -q
 DD = dd
 MOUNT = sudo mount
 CP = sudo cp
@@ -37,6 +37,7 @@ CLEAN = rm -f
 B = bootloader
 K = kernel
 U = user
+IMG = myos.img
 
 OBJS = $K/main.o \
 	   $K/printf.o \
@@ -73,7 +74,7 @@ $K/kernel.bin: $K/kernel
 	objcopy -I elf64-x86-64 -S -R ".eh_frame" -R ".comment" -O binary $K/kernel $K/kernel.bin
 
 # create floppy image
-$B/bootloader.img: $B/boot.bin $B/loader.bin $K/kernel.bin
+$(IMG): $B/boot.bin $B/loader.bin $K/kernel.bin
 	$(DD) if=/dev/zero of=$@ bs=512 count=2880
 	$(DD) if=$< of=$@ conv=notrunc
 	$(MOUNT) $@ /media/ -t vfat -o loop
@@ -88,21 +89,20 @@ $B/bootloader.img: $B/boot.bin $B/loader.bin $K/kernel.bin
 
 # run in qemu
 # &表示后台运行, \表示换行(多命令时仍属于整体，否则多个命令属于不同执行逻辑), &&表示逻辑与(当前命令执行成功后执行下一个命令), ;表示分隔命令(无论前一个命令是否成功，都执行下一个命令)
-qemu: $B/bootloader.img
-	$(QEMU) -drive file=$<,format=raw &\
-	PID=$$! && sleep 1 && $(VNC) $(ADDR);\
-	kill $$PID
+qemu: $(IMG)
+	$(QEMU) -drive file=$(IMG),format=raw,if=floppy
 
 # run in bochs
 # -前缀表示忽略命令的退出状态
-bochs: $B/bootloader.img
-	-$(BOCHS) -q -f bochsrc.bxrc || true
+bochs: $(IMG)
+	-$(BOCHS) -q -f bochsrc || true
 
 # debug in bochs
-dbg: $B/bootloader.img
-	-$(DBG) -q -f bochsrc.bxrc || true
+dbg: $(IMG)
+	-$(DBG) -q -f bochsrc || true
 
 # clean up files
 clean:
-	$(CLEAN) $B/*.bin $B/*.img
+	$(CLEAN) $(IMG)
+	$(CLEAN) $B/*.bin
 	$(CLEAN) $K/*.bin $K/*.o $K/kernel $K/head.s
