@@ -23,6 +23,7 @@ QEMU = qemu-system-x86_64
 VNC = vncviewer
 ADDR = 127.0.0.1:5900
 BOCHS = bochs
+BOCHSRC = ./bochs/bochsrc
 BXIMAGE = echo "c" | bximage -func=create -fd="1.44M" -q
 DD = dd
 MOUNT = sudo mount
@@ -95,11 +96,11 @@ qemu: $(IMG)
 # run in bochs
 # -前缀表示忽略命令的退出状态
 bochs: $(IMG)
-	-$(BOCHS) -q -f bochsrc || true
+	-$(BOCHS) -q -f $(BOCHSRC) || true
 
 # debug in bochs
 dbg: $(IMG)
-	-$(DBG) -q -f bochsrc || true
+	-$(DBG) -q -f $(BOCHSRC) || true
 
 # clean up files
 clean:
