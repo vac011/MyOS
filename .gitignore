@@ -1,7 +1,6 @@
-操作系统实现/
 书/
+*.img
 **/*.o
 **/*.bin
-**/*.img
 
 kernel/kernel
